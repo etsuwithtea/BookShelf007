@@ -8,6 +8,50 @@
 
 <PageTitle>Bookshelf</PageTitle>
 
+<style>
+    .book-card {
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .book-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+    }
+    .img-wrapper {
+        width: 100%;
+        height: 280px;
+        overflow: hidden;
+        position: relative;
+    }
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* ทำให้รูปเต็มพื้นที่ */
+        transition: transform 0.5s ease;
+    }
+    .book-card:hover .card-img-top {
+        transform: scale(1.1); /* ซูมรูปเล็กน้อยเวลา hover */
+    }
+    .card-title-prominent {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #2d3436;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 3rem;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+</style>
+
 <div class="container mt-2 mt-md-4 position-relative">
     <div class="d-flex justify-content-between align-items-center mb-3 mb-md-4">
         <h1>My Book Collection</h1>
@@ -40,22 +84,30 @@
     }
     else
     {
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 g-md-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
             @foreach (var book in books)
             {
                 <div class="col">
-                    <div class="card h-100 shadow-sm border-0">
+                    <div class="card h-100 shadow-sm book-card">
                         <div @onclick="() => ViewBook(book.Id)" style="cursor: pointer;">
-                            <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
-                                 class="card-img-top p-2 p-md-3" alt="@book.Title" style="height: 250px; object-fit: contain;">
+                            <div class="img-wrapper">
+                                <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
+                                     class="card-img-top" alt="@book.Title">
+                            </div>
                             <div class="card-body">
-                                <h5 class="card-title text-primary h6 mb-1">@book.Title</h5>
-                                <p class="card-text text-muted mb-2" style="font-size: 0.9rem;">@book.Author</p>
-                                <p class="card-text"><small class="text-muted">Published: @book.PublishedDate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)</small></p>
+                                <h5 class="card-title-prominent fs-4">@book.Title</h5>
+                                <p class="card-text text-muted mb-2" style="font-size: 0.9rem;">
+                                    <i class="bi bi-person-fill text-primary"></i> @book.Author
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge rounded-pill bg-light text-dark border">
+                                        <i class="bi bi-calendar3"></i> @book.PublishedDate.Year
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-center gap-1">
-                            <button class="btn btn-sm btn-outline-info" title="View" @onclick="() => ViewBook(book.Id)">
+                        <div class="card-footer bg-white border-0 pb-3 d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-dark" title="View" @onclick="() => ViewBook(book.Id)">
                                 <i class="bi bi-eye"></i> <span class="d-none d-md-inline">View</span>
                             </button>
                             <button class="btn btn-sm btn-outline-warning" title="Edit" @onclick="() => EditBook(book.Id)">

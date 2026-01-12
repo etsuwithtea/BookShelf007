@@ -2,104 +2,99 @@
 @page "/books/edit/{Id:int}"
 @using BookShelf007.Models
 @using BookShelf007.Services
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Components.Web
 @inject IBookService BookService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-<PageTitle>@(Id == 0 ? "Add New Book" : "Edit Book")</PageTitle>
-
 <div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-black text-white">
-            <h3>@(Id == 0 ? "Add New Book" : "Edit Book")</h3>
-        </div>
-        <div class="card-body">
-            <EditForm Model="book" OnValidSubmit="HandleSubmit" FormName="BookForm">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center border-end p-4">
+                        <div class="text-center">
+                            <h6 class="text-muted mb-3">Cover Preview</h6>
+                            <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
+                                 class="img-fluid rounded-3 shadow-sm" 
+                                 style="max-height: 300px; object-fit: cover;" />
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body p-4 p-md-5">
+                            <h2 class="fw-bold mb-4">@(Id == null ? "Add New Book" : "Edit Book")</h2>
+                            
+                            <EditForm Model="book" OnValidSubmit="HandleSubmit">
+                                <DataAnnotationsValidator />
+                                
+                                <div class="form-floating mb-3">
+                                    <InputText id="title" class="form-control" @bind-Value="book.Title" placeholder="Title" />
+                                    <label for="title"><i class="bi bi-book me-2"></i>Book Title</label>
+                                    <ValidationMessage For="() => book.Title" class="text-danger small" />
+                                </div>
 
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title</label>
-                    <InputText id="title" class="form-control" @bind-Value="book.Title" />
-                </div>
+                                <div class="form-floating mb-3">
+                                    <InputText id="author" class="form-control" @bind-Value="book.Author" placeholder="Author" />
+                                    <label for="author"><i class="bi bi-person me-2"></i>Author Name</label>
+                                    <ValidationMessage For="() => book.Author" class="text-danger small" />
+                                </div>
 
-                <div class="mb-3">
-                    <label for="author" class="form-label">Author</label>
-                    <InputText id="author" class="form-control" @bind-Value="book.Author" />
-                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputDate id="date" class="form-control" @bind-Value="book.PublishedDate" />
+                                            <label for="date">Published Date</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <InputText id="image" class="form-control" @bind-Value="book.ImageUrl" placeholder="Image URL" />
+                                            <label for="image">Cover Image URL</label>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <div class="mb-3">
-                    <label for="imageUrl" class="form-label">Image URL</label>
-                    <InputText id="imageUrl" class="form-control custom-placeholder" @bind-Value="book.ImageUrl" placeholder="https://example.com/image.jpg" />
-                </div>
+                                <div class="form-floating mb-3">
+                                    <InputTextArea id="summary" class="form-control" @bind-Value="book.Description" placeholder="Summary" style="height: 120px" />
+                                    <label for="summary"><i class="bi bi-card-text me-2"></i>Summary</label>
+                                    <ValidationMessage For="() => book.Description" class="text-danger small" />
+                                </div>
 
-                <div class="mb-3">
-                    <label for="publishedDate" class="form-label">Published Date</label>
-                    <InputDate id="publishedDate" class="form-control" @bind-Value="book.PublishedDate" />
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
+                                        <i class="bi bi-check-lg"></i> Save Changes
+                                    </button>
+                                    <button type="button" class="btn btn-light px-4 py-2 rounded-pill" @onclick="Cancel">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <InputTextArea id="description" class="form-control" rows="4" @bind-Value="book.Description" />
-                </div>
-
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-outline-success me-2">
-                        <i class="bi bi-check-lg"></i> Save
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
-                        <i class="bi bi-x-lg"></i> Cancel
-                    </button>
-                </div>
-            </EditForm>
+            </div>
         </div>
     </div>
 </div>
 
-
 @code {
-    [Parameter]
-    public int Id { get; set; }
-
-    private Book book = new();
+    [Parameter] public int? Id { get; set; }
+    private Book book = new() { PublishedDate = DateTime.Today };
 
     protected override void OnInitialized()
     {
-        if (Id != 0)
+        if (Id.HasValue)
         {
-            var existingBook = BookService.GetBookById(Id);
-            if (existingBook != null)
-            {
-                book = new Book
-                {
-                    Id = existingBook.Id,
-                    Title = existingBook.Title,
-                    Author = existingBook.Author,
-                    Description = existingBook.Description,
-                    ImageUrl = existingBook.ImageUrl,
-                    PublishedDate = existingBook.PublishedDate
-                };
-            }
+            var existingBook = BookService.GetBookById(Id.Value);
+            if (existingBook != null) book = existingBook;
         }
     }
 
     private void HandleSubmit()
     {
-        if (Id == 0)
-        {
-            BookService.AddBook(book);
-        }
-        else
-        {
-            BookService.UpdateBook(book);
-        }
+        if (Id.HasValue) BookService.UpdateBook(book);
+        else BookService.AddBook(book);
         NavigationManager.NavigateTo("/books?saved=true");
     }
 
-    private void Cancel()
-    {
-        NavigationManager.NavigateTo("/books");
-    }
+    private void Cancel() => NavigationManager.NavigateTo("/books");
 }
