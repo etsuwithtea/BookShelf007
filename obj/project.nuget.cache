@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "8w+zsdiSBJs=",
+  "success": true,
+  "projectFilePath": "/Users/etsuwithtea/DevZone/BookShelf007/BookShelf007/BookShelf007.csproj",
+  "expectedPackageFiles": [
+    "/Users/etsuwithtea/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.1/microsoft.aspnetcore.app.internal.assets.10.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

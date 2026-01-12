@@ -1,0 +1,80 @@
+.content[b-7jk79txmxb] {
+    padding-top: 0 !important;
+}
+
+.hero[b-7jk79txmxb] {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    overflow: hidden;
+}
+
+.hero[b-7jk79txmxb]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('images/bookshelfBG.jpg') no-repeat center center;
+    background-size: cover;
+    filter: blur(8px);
+    transform: scale(1.1);
+    z-index: 0;
+}
+
+.hero-overlay[b-7jk79txmxb] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%);
+    z-index: 1;
+}
+
+.hero-content[b-7jk79txmxb] {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.hero-content h1[b-7jk79txmxb] {
+    text-shadow: 2px 2px 20px rgba(0,0,0,0.5);
+    font-size: 3rem;
+}
+
+@media (min-width: 768px) {
+    .hero-content h1[b-7jk79txmxb] {
+        font-size: 4.5rem;
+    }
+}
+
+.hero-content p[b-7jk79txmxb] {
+    max-width: 700px;
+    margin: 2rem auto;
+    font-size: 1.6rem;
+    font-weight: 300;
+    text-shadow: 1px 1px 10px rgba(0,0,0,0.5);
+    opacity: 0.9;
+}
+
+.btn-primary[b-7jk79txmxb] {
+    background-color: #006bb7;
+    border: none;
+    padding: 1rem 3rem !important;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover[b-7jk79txmxb] {
+    transform: translateY(-3px);
+    background-color: #005a9e;
+}

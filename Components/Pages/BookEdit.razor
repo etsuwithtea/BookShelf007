@@ -1,0 +1,104 @@
+@page "/books/edit"
+@page "/books/edit/{Id:int}"
+@using BookShelf007.Models
+@using BookShelf007.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject IBookService BookService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>@(Id == 0 ? "Add New Book" : "Edit Book")</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-black text-white">
+            <h3>@(Id == 0 ? "Add New Book" : "Edit Book")</h3>
+        </div>
+        <div class="card-body">
+            <EditForm Model="book" OnValidSubmit="HandleSubmit" FormName="BookForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="book.Title" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="author" class="form-label">Author</label>
+                    <InputText id="author" class="form-control" @bind-Value="book.Author" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="imageUrl" class="form-label">Image URL</label>
+                    <InputText id="imageUrl" class="form-control" @bind-Value="book.ImageUrl" placeholder="https://example.com/image.jpg" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="publishedDate" class="form-label">Published Date</label>
+                    <InputDate id="publishedDate" class="form-control" @bind-Value="book.PublishedDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputTextArea id="description" class="form-control" rows="4" @bind-Value="book.Description" />
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-outline-success me-2">
+                        <i class="bi bi-check-lg"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Book book = new();
+
+    protected override void OnInitialized()
+    {
+        if (Id != 0)
+        {
+            var existingBook = BookService.GetBookById(Id);
+            if (existingBook != null)
+            {
+                book = new Book
+                {
+                    Id = existingBook.Id,
+                    Title = existingBook.Title,
+                    Author = existingBook.Author,
+                    Description = existingBook.Description,
+                    ImageUrl = existingBook.ImageUrl,
+                    PublishedDate = existingBook.PublishedDate
+                };
+            }
+        }
+    }
+
+    private void HandleSubmit()
+    {
+        if (Id == 0)
+        {
+            BookService.AddBook(book);
+        }
+        else
+        {
+            BookService.UpdateBook(book);
+        }
+        NavigationManager.NavigateTo("/books?saved=true");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/books");
+    }
+}
