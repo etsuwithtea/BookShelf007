@@ -2,6 +2,7 @@
 @using BookShelf007.Models
 @using BookShelf007.Services
 @using Microsoft.AspNetCore.WebUtilities
+@using System.Linq
 @inject IBookService BookService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
@@ -20,20 +21,15 @@
         transform: translateY(-8px);
         box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
     }
-    .img-wrapper {
-        width: 100%;
-        height: 280px;
-        overflow: hidden;
-        position: relative;
-    }
     .card-img-top {
         width: 100%;
-        height: 100%;
-        object-fit: cover; /* ทำให้รูปเต็มพื้นที่ */
+        height: 380px;
+        object-fit: cover;
         transition: transform 0.5s ease;
+        display: block; 
     }
     .book-card:hover .card-img-top {
-        transform: scale(1.1); /* ซูมรูปเล็กน้อยเวลา hover */
+        transform: scale(1.1); 
     }
     .card-title-prominent {
         font-size: 1.15rem;
@@ -41,11 +37,17 @@
         color: #2d3436;
         line-height: 1.3;
         margin-bottom: 0.5rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        height: 3rem;
+        height: 3.5rem;
+        overflow-y: auto;
+        word-wrap: break-word;
+    }
+
+    .card-title-prominent::-webkit-scrollbar {
+        width: 4px;
+    }
+    .card-title-prominent::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
     }
     .card-body {
         padding: 1.25rem;
@@ -53,11 +55,24 @@
 </style>
 
 <div class="container mt-2 mt-md-4 position-relative">
-    <div class="d-flex justify-content-between align-items-center mb-3 mb-md-4">
-        <h1>My Book Collection</h1>
-        <button class="btn btn-outline-primary" @onclick="AddNewBook">
-            <i class="bi bi-plus-lg"></i> Add New Book
-        </button>
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3 mb-md-4 gap-3">
+        <h1 class="mb-0">My Book Collection</h1>
+        <div class="d-flex flex-row align-items-center gap-2 flex-grow-1 justify-content-lg-end">
+            <div class="input-group" style="max-width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0" placeholder="Search..." 
+                       @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+            </div>
+            <select class="form-select w-auto" @onchange="OnSortChanged">
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+                <option value="date-newest">Date (Newest)</option>
+                <option value="date-oldest">Date (Oldest)</option>
+            </select>
+            <button class="btn btn-primary text-nowrap" @onclick="AddNewBook">
+                <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">Add New Book</span><span class="d-inline d-sm-none">Add</span>
+            </button>
+        </div>
     </div>
 
     @if (showToast)
@@ -90,10 +105,8 @@
                 <div class="col">
                     <div class="card h-100 shadow-sm book-card">
                         <div @onclick="() => ViewBook(book.Id)" style="cursor: pointer;">
-                            <div class="img-wrapper">
-                                <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
-                                     class="card-img-top" alt="@book.Title">
-                            </div>
+                            <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
+                                    class="card-img-top" alt="@book.Title">
                             <div class="card-body">
                                 <h5 class="card-title-prominent fs-4">@book.Title</h5>
                                 <p class="card-text text-muted mb-2" style="font-size: 0.9rem;">
@@ -121,6 +134,27 @@
                 </div>
             }
         </div>
+
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        var pageNum = i;
+                        <li class="page-item @(currentPage == pageNum ? "active" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(pageNum)">@pageNum</button>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
 </div>
 
@@ -128,6 +162,12 @@
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
     private List<Book>? books;
     private bool showToast = false;
+    private string currentSort = "title-asc";
+    
+    private string searchTerm = "";
+    private int currentPage = 1;
+    private int pageSize = 8;
+    private int totalPages = 1;
 
     protected override void OnInitialized()
     {
@@ -143,7 +183,6 @@
             showToast = value == "true";
             if (showToast)
             {
-                // Auto-hide toast after 3 seconds
                 Task.Delay(3000).ContinueWith(_ => 
                 {
                     showToast = false;
@@ -155,7 +194,50 @@
 
     private void LoadBooks()
     {
-        books = BookService.GetAllBooks();
+        var query = BookService.GetAllBooks().AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        query = currentSort switch
+        {
+            "title-asc" => query.OrderBy(b => b.Title),
+            "title-desc" => query.OrderByDescending(b => b.Title),
+            "date-newest" => query.OrderByDescending(b => b.PublishedDate),
+            "date-oldest" => query.OrderBy(b => b.PublishedDate),
+            _ => query.OrderBy(b => b.Title)
+        };
+
+        var filteredList = query.ToList();
+        totalPages = (int)Math.Ceiling(filteredList.Count / (double)pageSize);
+        
+        if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        books = filteredList.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    private void HandleSearch()
+    {
+        currentPage = 1;
+        LoadBooks();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            LoadBooks();
+        }
+    }
+
+    private void OnSortChanged(ChangeEventArgs e)
+    {
+        currentSort = e.Value?.ToString() ?? "title-asc";
+        LoadBooks();
     }
 
     private void AddNewBook()
