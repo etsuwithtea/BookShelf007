@@ -64,8 +64,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private Book? book;
-
-    protected override void OnInitialized() => book = BookService.GetBookById(Id);
+    protected override async Task OnInitializedAsync() => book = await BookService.GetBookByIdAsync(Id);
     private void GoBack() => NavigationManager.NavigateTo("/books");
     private void EditBook() => NavigationManager.NavigateTo($"/books/edit/{Id}");
 }

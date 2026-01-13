@@ -118,15 +118,14 @@
     private List<Book>? books;
     private bool showToast = false;
     private string currentSort = "title-asc";
-    
     private string searchTerm = "";
     private int currentPage = 1;
     private int pageSize = 8;
     private int totalPages = 1;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadBooks();
+        await LoadBooks();
         CheckForToast();
     }
 
@@ -147,9 +146,10 @@
         }
     }
 
-    private void LoadBooks()
+    private async Task LoadBooks()
     {
-        var query = BookService.GetAllBooks().AsEnumerable();
+        var allBooks = await BookService.GetAllBooksAsync();
+        var query = allBooks.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -174,25 +174,25 @@
         books = filteredList.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    private void HandleSearch()
+    private async Task HandleSearch()
     {
         currentPage = 1;
-        LoadBooks();
+        await LoadBooks();
     }
 
-    private void ChangePage(int page)
+    private async Task ChangePage(int page)
     {
         if (page >= 1 && page <= totalPages)
         {
             currentPage = page;
-            LoadBooks();
+            await LoadBooks();
         }
     }
 
-    private void OnSortChanged(ChangeEventArgs e)
+    private async Task OnSortChanged(ChangeEventArgs e)
     {
         currentSort = e.Value?.ToString() ?? "title-asc";
-        LoadBooks();
+        await LoadBooks();
     }
 
     private void AddNewBook()
@@ -215,8 +215,8 @@
         var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this book?");
         if (confirmed)
         {
-            BookService.DeleteBook(id);
-            LoadBooks();
+            await BookService.DeleteBookAsync(id);
+            await LoadBooks();
         }
     }
 }

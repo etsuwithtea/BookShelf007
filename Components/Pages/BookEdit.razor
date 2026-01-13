@@ -78,21 +78,27 @@
 
 @code {
     [Parameter] public int? Id { get; set; }
-    private Book book = new() { PublishedDate = DateTime.Today };
-
-    protected override void OnInitialized()
+    private Book book = new() { PublishedDate = DateTime.UtcNow };
+    protected override async Task OnParametersSetAsync()
     {
         if (Id.HasValue)
         {
-            var existingBook = BookService.GetBookById(Id.Value);
-            if (existingBook != null) book = existingBook;
+            var existingBook = await BookService.GetBookByIdAsync(Id.Value);
+            if (existingBook != null)
+            {
+                book = existingBook;
+            }
+        }
+        else
+        {
+            book = new() { PublishedDate = DateTime.UtcNow };
         }
     }
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        if (Id.HasValue) BookService.UpdateBook(book);
-        else BookService.AddBook(book);
+        if (Id.HasValue) await BookService.UpdateBookAsync(book);
+        else await BookService.AddBookAsync(book);
         NavigationManager.NavigateTo("/books?saved=true");
     }
 
