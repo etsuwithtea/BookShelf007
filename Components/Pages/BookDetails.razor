@@ -1,6 +1,7 @@
 @page "/books/details/{id:int}"
 @using BookShelf007.Models
 @using BookShelf007.Services
+@attribute [Authorize]
 @inject IBookService BookService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer

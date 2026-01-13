@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BookShelf007.Models;
 using System.Text.RegularExpressions;
 
 namespace BookShelf007.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -22,9 +23,16 @@ public class AppDbContext : DbContext
             entity.Property(b => b.Id).HasColumnName("id").UseIdentityByDefaultColumn();
         });
 
-        // Convert all column names to snake_case and handle DateTime UTC conversion
+        // Convert all table and column names to snake_case and handle DateTime UTC conversion
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
+            // Replace table names
+            var tableName = entity.GetTableName();
+            if (tableName != null)
+            {
+                entity.SetTableName(ToSnakeCase(tableName));
+            }
+
             foreach (var property in entity.GetProperties())
             {
                 if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))

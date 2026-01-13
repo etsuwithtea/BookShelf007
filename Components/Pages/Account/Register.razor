@@ -1,0 +1,95 @@
+@page "/account/register"
+@using System.ComponentModel.DataAnnotations
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>Register</h3>
+                </div>
+                <div class="card-body p-4">
+                    <EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="registerForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email" class="form-control" @bind-Value="Input.Email" placeholder="name@example.com" />
+                            <ValidationMessage For="() => Input.Email" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="Input.Password" />
+                            <ValidationMessage For="() => Input.Password" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm-password" class="form-label">Confirm Password</label>
+                            <InputText id="confirm-password" type="password" class="form-control" @bind-Value="Input.ConfirmPassword" />
+                            <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                        </div>
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger">@errorMessage</div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </EditForm>
+                    <div class="mt-3 text-center">
+                        <p>Already have an account? <a href="account/login">Login</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private RegisterInput Input { get; set; } = default!;
+
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+    }
+
+    private async Task RegisterUser()
+    {
+        var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (result.Succeeded)
+        {
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+        }
+    }
+
+    public class RegisterInput
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

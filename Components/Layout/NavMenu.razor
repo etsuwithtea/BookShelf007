@@ -25,6 +25,34 @@
                         Dashboard
                     </NavLink>
                 </li>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item">
+                            <span class="nav-link text-dark">Hello, @context.User.Identity?.Name!</span>
+                        </li>
+                        <li class="nav-item">
+                            <form action="Account/Logout" method="post" class="m-0">
+                                <AntiforgeryToken />
+                                <button type="submit" class="nav-link nav-link-btn">
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="account/register">
+                                Register
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="account/login">
+                                Login
+                            </NavLink>
+                        </li>
+                    </NotAuthorized>
+                </AuthorizeView>
             </ul>
         </div>
     </div>
