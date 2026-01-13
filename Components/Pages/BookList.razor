@@ -24,6 +24,9 @@
                 <option value="date-newest">Date (Newest)</option>
                 <option value="date-oldest">Date (Oldest)</option>
             </select>
+            <button class="btn @(showFavoritesOnly ? "btn-danger" : "btn-outline-danger")" @onclick="ToggleFavoritesFilter" title="Show Favorites Only">
+                <i class="bi @(showFavoritesOnly ? "bi-heart-fill" : "bi-heart")"></i>
+            </button>
             <button class="btn btn-primary text-nowrap" @onclick="AddNewBook">
                 <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">Add New Book</span><span class="d-inline d-sm-none">Add</span>
             </button>
@@ -58,7 +61,12 @@
             @foreach (var book in books)
             {
                 <div class="col">
-                    <div class="card h-100 shadow-sm book-card">
+                    <div class="card h-100 shadow-sm book-card position-relative">
+                        <button class="btn btn-light btn-sm rounded-circle shadow-sm position-absolute top-0 end-0 m-2" 
+                                style="z-index: 10; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" 
+                                @onclick="() => ToggleFavorite(book.Id)" @onclick:stopPropagation="true">
+                            <i class="bi @(book.IsFavorite ? "bi-heart-fill text-danger" : "bi-heart text-muted") fs-5"></i>
+                        </button>
                         <div @onclick="() => ViewBook(book.Id)" style="cursor: pointer;">
                             <img src="@(string.IsNullOrEmpty(book.ImageUrl) ? "/images/Books/default.png" : book.ImageUrl)" 
                                     class="card-img-top" alt="@book.Title">
@@ -119,6 +127,7 @@
     private bool showToast = false;
     private string currentSort = "title-asc";
     private string searchTerm = "";
+    private bool showFavoritesOnly = false;
     private int currentPage = 1;
     private int pageSize = 8;
     private int totalPages = 1;
@@ -156,6 +165,11 @@
             query = query.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
+        if (showFavoritesOnly)
+        {
+            query = query.Where(b => b.IsFavorite);
+        }
+
         query = currentSort switch
         {
             "title-asc" => query.OrderBy(b => b.Title),
@@ -177,6 +191,19 @@
     private async Task HandleSearch()
     {
         currentPage = 1;
+        await LoadBooks();
+    }
+
+    private async Task ToggleFavoritesFilter()
+    {
+        showFavoritesOnly = !showFavoritesOnly;
+        currentPage = 1;
+        await LoadBooks();
+    }
+
+    private async Task ToggleFavorite(int id)
+    {
+        await BookService.ToggleFavoriteAsync(id);
         await LoadBooks();
     }
 

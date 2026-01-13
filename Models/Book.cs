@@ -7,4 +7,5 @@ public class Book
     public string Description { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
     public DateTime PublishedDate { get; set; } = DateTime.UtcNow;
+    public bool IsFavorite { get; set; }
 }

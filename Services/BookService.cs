@@ -34,6 +34,7 @@ public class BookService : IBookService
             existingBook.Description = book.Description;
             existingBook.ImageUrl = book.ImageUrl;
             existingBook.PublishedDate = book.PublishedDate;
+            existingBook.IsFavorite = book.IsFavorite;
             await _context.SaveChangesAsync();
         }
     }
@@ -46,5 +47,26 @@ public class BookService : IBookService
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task ToggleFavoriteAsync(int id)
+    {
+        var book = await GetBookByIdAsync(id);
+        if (book != null)
+        {
+            book.IsFavorite = !book.IsFavorite;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<BookStatistics> GetStatisticsAsync()
+    {
+        var allBooks = await _context.Books.ToListAsync();
+        return new BookStatistics
+        {
+            TotalBooks = allBooks.Count,
+            FavoriteBooks = allBooks.Count(b => b.IsFavorite),
+            RecentBooks = allBooks.OrderByDescending(b => b.Id).Take(5).ToList()
+        };
     }
 }
