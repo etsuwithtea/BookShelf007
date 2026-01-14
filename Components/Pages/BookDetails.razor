@@ -66,6 +66,8 @@
 </div>
 
 @code {
+
+    //teset branch
     [Parameter] public int Id { get; set; }
     private Book? book;
     protected override async Task OnInitializedAsync() => book = await BookService.GetBookByIdAsync(Id);
