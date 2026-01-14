@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace BookShelf007.Models;
 public class Book
 {
     public int Id { get; set; }
+
+    [Required(ErrorMessage = "Title is required")]
     public string Title { get; set; } = string.Empty;
     public string Author { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
