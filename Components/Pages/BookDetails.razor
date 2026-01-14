@@ -67,6 +67,7 @@
 
 @code {
     [Parameter] public int Id { get; set; }
+    // test Comment testComment
     private Book? book;
     protected override async Task OnInitializedAsync() => book = await BookService.GetBookByIdAsync(Id);
     private void GoBack() => NavigationManager.NavigateTo("/books");
